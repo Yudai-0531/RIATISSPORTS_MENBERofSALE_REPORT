@@ -9,9 +9,14 @@ ONE TEAMは、株式会社RIATIS Sports様向けの営業マンの日報報告�
 - **カラー**: Black背景 + Red アクセント
 - **コンセプト**: Cool, Motivating, High Performance
 
+## 🔐 認証システム
+- **管理者発行型アカウント**: 管理者がSupabaseで直接ユーザーを作成
+- **シンプルなログイン**: ID（メールアドレス形式）とパスワードでログイン
+- **セキュリティ**: Supabase RLS（Row Level Security）で保護
+
 ## 🚀 機能
 ### Phase 1（現在の実装）
-- ✅ ログイン画面
+- ✅ ログイン画面（管理者発行型アカウント）
 - ✅ REPORTページ（日報入力）
   - 日替わり名言表示
   - 目標値表示（TEAM GOAL / YOUR GOAL）
@@ -39,10 +44,8 @@ ONE TEAMは、株式会社RIATIS Sports様向けの営業マンの日報報告�
 ├── styles.css          # 共通スタイル
 ├── css/
 │   └── report.css      # REPORTページ専用スタイル
-├── js/
-│   ├── config.js       # Supabase設定
-│   ├── auth.js         # 認証ロジック
-│   └── report.js       # REPORTページロジック
+├── ADMIN_GUIDE.md      # 管理者向けガイド（重要！）
+├── SUPABASE_SETUP.md   # Supabaseセットアップ手順
 └── README.md           # このファイル
 ```
 
