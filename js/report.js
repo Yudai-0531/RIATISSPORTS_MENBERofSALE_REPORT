@@ -1,70 +1,101 @@
-// Report Page JavaScript
+// Report Page JavaScript - Supabase連携
+import { supabaseClient, getCurrentUser, getUserProfile } from './supabase.js';
 
-// ログイン確認
-if (!localStorage.getItem('isLoggedIn')) {
-    window.location.href = 'index.html';
-}
+let currentUser = null;
+let userProfile = null;
 
-// 今日の名言（サンプルデータ）
-const quotes = [
-    {
-        text: "成功は最終的なものではなく、失敗は致命的なものではない。大切なのは続ける勇気だ。",
-        author: "Winston Churchill"
-    },
-    {
-        text: "限界とは、ただの思い込みに過ぎない。",
-        author: "Muhammad Ali"
-    },
-    {
-        text: "準備とは、言い訳をなくすことだ。",
-        author: "Kobe Bryant"
-    },
-    {
-        text: "夢を実現する唯一の方法は、それに向かって行動することだ。",
-        author: "Walt Disney"
-    },
-    {
-        text: "できると思えばできる、できないと思えばできない。",
-        author: "Henry Ford"
-    }
-];
-
-// 今日の日付に基づいて名言を表示
-function loadQuote() {
+// 今日の名言をSupabaseから取得
+async function loadQuote() {
     const today = new Date();
-    const dayOfYear = Math.floor((today - new Date(today.getFullYear(), 0, 0)) / 86400000);
-    const quoteIndex = dayOfYear % quotes.length;
-    const quote = quotes[quoteIndex];
+    const dateKey = String(today.getMonth() + 1).padStart(2, '0') + '-' + String(today.getDate()).padStart(2, '0');
     
-    document.getElementById('quoteText').textContent = `"${quote.text}"`;
-    document.getElementById('quoteAuthor').textContent = `- ${quote.author}`;
+    const { data, error } = await supabaseClient
+        .from('quotes')
+        .select('*')
+        .eq('date_key', dateKey)
+        .single();
+    
+    if (error || !data) {
+        // エラーまたはデータがない場合はデフォルト表示
+        console.log('Quote not found for today, using default');
+        document.getElementById('quoteText').textContent = '"成功は最終的なものではなく、失敗は致命的なものではない。大切なのは続ける勇気だ。"';
+        document.getElementById('quoteAuthor').textContent = '- Winston Churchill';
+        return;
+    }
+    
+    document.getElementById('quoteText').textContent = `"${data.text_japanese}"`;
+    document.getElementById('quoteAuthor').textContent = `- ${data.author}`;
 }
 
-// 目標値の読み込み（仮データ）
-function loadGoals() {
-    // TODO: Supabaseから目標値を取得
-    // 現在は仮の値を表示
-    document.getElementById('teamGoal').textContent = '5,000,000';
-    document.getElementById('yourGoal').textContent = '500,000';
+// 目標値の読み込み
+async function loadGoals() {
+    const today = new Date();
+    const targetMonth = today.getFullYear() + '-' + String(today.getMonth() + 1).padStart(2, '0') + '-01';
+    
+    // チーム目標を取得
+    const { data: teamTarget, error: teamError } = await supabaseClient
+        .from('monthly_targets')
+        .select('target_revenue')
+        .eq('target_month', targetMonth)
+        .is('user_id', null)
+        .single();
+    
+    if (!teamError && teamTarget) {
+        document.getElementById('teamGoal').textContent = Number(teamTarget.target_revenue).toLocaleString();
+    }
+    
+    // 個人目標を取得
+    if (currentUser) {
+        const { data: userTarget, error: userError } = await supabaseClient
+            .from('monthly_targets')
+            .select('target_revenue')
+            .eq('target_month', targetMonth)
+            .eq('user_id', currentUser.id)
+            .single();
+        
+        if (!userError && userTarget) {
+            document.getElementById('yourGoal').textContent = Number(userTarget.target_revenue).toLocaleString();
+        }
+    }
 }
 
 // フォーム送信処理
-document.getElementById('reportForm').addEventListener('submit', async (e) => {
+async function submitReport(e) {
     e.preventDefault();
     
-    const formData = {
-        date: new Date().toISOString().split('T')[0],
-        offerCount: parseInt(document.getElementById('offerCount').value),
-        negotiationCount: parseInt(document.getElementById('negotiationCount').value),
-        closedDealCount: parseInt(document.getElementById('closedDealCount').value),
-        riatisViewCount: parseInt(document.getElementById('riatisViewCount').value),
-        crmOperationTime: parseInt(document.getElementById('crmOperationTime').value),
-        nextAction: document.getElementById('nextAction').value
+    if (!currentUser) {
+        alert('ログインセッションが切れています。再度ログインしてください。');
+        window.location.href = 'index.html';
+        return;
+    }
+    
+    const reportData = {
+        user_id: currentUser.id,
+        report_date: new Date().toISOString().split('T')[0],
+        offer_count: parseInt(document.getElementById('offerCount').value),
+        negotiation_count: parseInt(document.getElementById('negotiationCount').value),
+        closed_deal_count: parseInt(document.getElementById('closedDealCount').value),
+        riatis_view_count: parseInt(document.getElementById('riatisViewCount').value),
+        crm_operation_time: parseInt(document.getElementById('crmOperationTime').value),
+        next_action_text: document.getElementById('nextAction').value
     };
     
     try {
-        // TODO: Supabaseにデータを保存
-        console.log('Report Data:', formData);
+        // Supabaseにデータを保存（upsert: 既存データがあれば更新）
+        const { data, error } = await supabaseClient
+            .from('daily_reports')
+            .upsert(reportData, {
+                onConflict: 'user_id,report_date'
+            })
+            .select();
+        
+        if (error) {
+            console.error('Error submitting report:', error);
+            alert('報告の送信に失敗しました: ' + error.message);
+            return;
+        }
+        
+        console.log('Report submitted successfully:', data);
         
         // 成功モーダルを表示
         showSuccessModal();
@@ -76,7 +107,7 @@ document.getElementById('reportForm').addEventListener('submit', async (e) => {
         console.error('Error submitting report:', error);
         alert('報告の送信に失敗しました。もう一度お試しください。');
     }
-});
+}
 
 // 成功モーダルの表示
 function showSuccessModal() {
@@ -91,17 +122,39 @@ window.closeModal = function() {
 };
 
 // ログアウト処理
-document.getElementById('logoutBtn').addEventListener('click', (e) => {
-    e.preventDefault();
+async function logout() {
     if (confirm('ログアウトしますか？')) {
-        localStorage.removeItem('isLoggedIn');
-        localStorage.removeItem('userEmail');
+        await supabaseClient.auth.signOut();
         window.location.href = 'index.html';
     }
-});
+}
+
+// ページ読み込み時の初期化
+async function initializePage() {
+    // ログイン確認
+    const { data: { session } } = await supabaseClient.auth.getSession();
+    
+    if (!session) {
+        window.location.href = 'index.html';
+        return;
+    }
+    
+    currentUser = session.user;
+    
+    // ユーザープロファイルを取得
+    userProfile = await getUserProfile(currentUser.id);
+    
+    // データを読み込み
+    await loadQuote();
+    await loadGoals();
+    
+    // イベントリスナーを設定
+    document.getElementById('reportForm').addEventListener('submit', submitReport);
+    document.getElementById('logoutBtn').addEventListener('click', (e) => {
+        e.preventDefault();
+        logout();
+    });
+}
 
 // ページ読み込み時
-document.addEventListener('DOMContentLoaded', () => {
-    loadQuote();
-    loadGoals();
-});
+document.addEventListener('DOMContentLoaded', initializePage);
