@@ -38,6 +38,89 @@
         </div>
     </div>
 
-    <script type="module" src="js/signup.js"></script>
+    <script>
+        // Supabaseクライアントの初期化
+        const { createClient } = supabase;
+        const supabaseClient = createClient(
+            'https://omhucnthjctzyymrgaan.supabase.co',
+            'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9taHVjbnRoamN0enl5bXJnYWFuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njc4NDA5MTksImV4cCI6MjA4MzQxNjkxOX0.eJjpi5OG2ZecyNhYMBrR49T5sWbBE2dOwG6Y76-jG7g'
+        );
+
+        document.addEventListener('DOMContentLoaded', async () => {
+            const signupForm = document.getElementById('signupForm');
+            const errorMessage = document.getElementById('errorMessage');
+
+            // 既にログイン済みの場合はリダイレクト
+            const { data: { session } } = await supabaseClient.auth.getSession();
+            if (session) {
+                window.location.href = 'report.html';
+                return;
+            }
+
+            signupForm.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                
+                const name = document.getElementById('name').value;
+                const email = document.getElementById('email').value;
+                const password = document.getElementById('password').value;
+
+                console.log('Signup attempt:', { name, email });
+
+                try {
+                    // Supabaseでユーザーを作成
+                    const { data: authData, error: authError } = await supabaseClient.auth.signUp({
+                        email: email,
+                        password: password,
+                        options: {
+                            data: {
+                                name: name
+                            }
+                        }
+                    });
+                    
+                    if (authError) {
+                        console.error('Auth error:', authError);
+                        showError('アカウント作成に失敗しました: ' + authError.message);
+                        return;
+                    }
+
+                    console.log('User created:', authData.user);
+
+                    // usersテーブルにユーザー情報を追加
+                    const { error: insertError } = await supabaseClient
+                        .from('users')
+                        .insert([
+                            {
+                                user_id: authData.user.id,
+                                email: email,
+                                name: name,
+                                role: 'sales_user'
+                            }
+                        ]);
+                    
+                    if (insertError) {
+                        console.error('Error inserting user profile:', insertError);
+                    }
+
+                    // 成功メッセージ
+                    alert('アカウント作成が完了しました！');
+                    window.location.href = 'index.html';
+                    
+                } catch (error) {
+                    console.error('Error:', error);
+                    showError('アカウント作成に失敗しました: ' + error.message);
+                }
+            });
+
+            function showError(message) {
+                errorMessage.textContent = message;
+                errorMessage.classList.add('show');
+                
+                setTimeout(() => {
+                    errorMessage.classList.remove('show');
+                }, 5000);
+            }
+        });
+    </script>
 </body>
 </html>

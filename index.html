@@ -34,6 +34,65 @@
         </div>
     </div>
 
-    <script type="module" src="js/auth.js"></script>
+    <script>
+        // Supabaseクライアントの初期化
+        const { createClient } = supabase;
+        const supabaseClient = createClient(
+            'https://omhucnthjctzyymrgaan.supabase.co',
+            'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9taHVjbnRoamN0enl5bXJnYWFuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njc4NDA5MTksImV4cCI6MjA4MzQxNjkxOX0.eJjpi5OG2ZecyNhYMBrR49T5sWbBE2dOwG6Y76-jG7g'
+        );
+
+        document.addEventListener('DOMContentLoaded', async () => {
+            const loginForm = document.getElementById('loginForm');
+            const errorMessage = document.getElementById('errorMessage');
+
+            // 既にログイン済みの場合はリダイレクト
+            const { data: { session } } = await supabaseClient.auth.getSession();
+            if (session) {
+                window.location.href = 'report.html';
+                return;
+            }
+
+            loginForm.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                
+                const email = document.getElementById('email').value;
+                const password = document.getElementById('password').value;
+
+                console.log('Login attempt:', email);
+
+                try {
+                    // Supabase認証
+                    const { data, error } = await supabaseClient.auth.signInWithPassword({
+                        email: email,
+                        password: password
+                    });
+                    
+                    if (error) {
+                        console.error('Login error:', error);
+                        showError('ログインに失敗しました: ' + error.message);
+                        return;
+                    }
+
+                    // ログイン成功
+                    console.log('Login successful:', data.user);
+                    window.location.href = 'report.html';
+                    
+                } catch (error) {
+                    console.error('Error:', error);
+                    showError('ログインに失敗しました: ' + error.message);
+                }
+            });
+
+            function showError(message) {
+                errorMessage.textContent = message;
+                errorMessage.classList.add('show');
+                
+                setTimeout(() => {
+                    errorMessage.classList.remove('show');
+                }, 5000);
+            }
+        });
+    </script>
 </body>
 </html>
