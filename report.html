@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ONE TEAM - REPORT</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="css/report.css">
+</head>
+<body>
+    <div class="app-container">
+        <!-- ナビゲーション -->
+        <nav class="nav-bar">
+            <h1 class="nav-logo">ONE TEAM</h1>
+            <div class="nav-links">
+                <a href="report.html" class="nav-link active">REPORT</a>
+                <a href="analyze.html" class="nav-link">ANALYZE</a>
+                <a href="#" id="logoutBtn" class="nav-link">LOGOUT</a>
+            </div>
+        </nav>
+
+        <!-- ヘッダーセクション -->
+        <header class="header">
+            <!-- 今日の名言 -->
+            <div class="quote-section">
+                <p class="quote-text" id="quoteText">「成功は最終的なものではなく、失敗は致命的なものではない。大切なのは続ける勇気だ。」</p>
+                <p class="quote-author" id="quoteAuthor">- Winston Churchill</p>
+            </div>
+
+            <!-- 目標表示 -->
+            <div class="targets">
+                <div class="target-card">
+                    <div class="target-label">TEAM GOAL</div>
+                    <div class="target-value">¥<span id="teamGoal">5,000,000</span></div>
+                </div>
+                <div class="target-card">
+                    <div class="target-label">YOUR GOAL</div>
+                    <div class="target-value">¥<span id="yourGoal">500,000</span></div>
+                </div>
+            </div>
+        </header>
+
+        <!-- 日報入力セクション -->
+        <main class="report-section">
+            <h2 class="section-title">Today's Report</h2>
+            
+            <form id="reportForm" class="report-form">
+                <div class="input-grid">
+                    <div class="input-group">
+                        <label for="offerCount">オファーの数</label>
+                        <input type="number" id="offerCount" min="0" required>
+                    </div>
+
+                    <div class="input-group">
+                        <label for="negotiationCount">商談数</label>
+                        <input type="number" id="negotiationCount" min="0" required>
+                    </div>
+
+                    <div class="input-group">
+                        <label for="closedDealCount">成約数</label>
+                        <input type="number" id="closedDealCount" min="0" required>
+                    </div>
+
+                    <div class="input-group">
+                        <label for="riatisViewCount">RIATIS視聴数</label>
+                        <input type="number" id="riatisViewCount" min="0" required>
+                    </div>
+
+                    <div class="input-group">
+                        <label for="crmOperationTime">CRM操作時間（分）</label>
+                        <input type="number" id="crmOperationTime" min="0" required>
+                    </div>
+                </div>
+
+                <div class="textarea-group">
+                    <label for="nextAction">明日のネクストアクション</label>
+                    <textarea id="nextAction" rows="4" placeholder="明日のアクションプランを入力してください..." required></textarea>
+                </div>
+
+                <button type="submit" class="btn-submit">
+                    🚀 報告する
+                </button>
+            </form>
+        </main>
+    </div>
+
+    <!-- 成功モーダル -->
+    <div id="successModal" class="modal">
+        <div class="modal-content">
+            <h2 class="modal-title">🎉 素晴らしい！</h2>
+            <p class="modal-message">今日も一日お疲れ様でした！</p>
+            <p class="modal-submessage">あなたの努力がチームを前進させています</p>
+            <button class="btn-primary" onclick="closeModal()">閉じる</button>
+        </div>
+    </div>
+
+    <script type="module" src="js/report.js"></script>
+</body>
+</html>

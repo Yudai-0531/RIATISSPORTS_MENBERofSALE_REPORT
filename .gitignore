@@ -1,0 +1,26 @@
+# 環境設定ファイル（セキュリティのため）
+js/config.js
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Editor directories and files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Node modules (将来使用する可能性のため)
+node_modules/
+npm-debug.log*
+
+# Environment variables
+.env
+.env.local
